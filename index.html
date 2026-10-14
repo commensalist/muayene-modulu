@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Muayene fotoğrafları</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--tx:#1c1e21;--mu:#6b7280;--p:#0b6bcb;--ok:#15803d;--wa:#b45309;--er:#b91c1c;--ln:#e3e5e9}
+@media (prefers-color-scheme:dark){:root{--bg:#121417;--card:#1c1f24;--tx:#eceef1;--mu:#9aa3af;--p:#4da3ff;--ok:#4ade80;--wa:#fbbf24;--er:#f87171;--ln:#2c3138}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:0 14px calc(96px + env(safe-area-inset-bottom))}
+h1{font-size:1.25rem;margin:16px 0 4px}
+h2{font-size:1.05rem;margin:0 0 8px}
+.s{color:var(--mu);font-size:.9rem}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:12px;margin:10px 0}
+button,.btn{font:inherit;border:0;border-radius:12px;padding:12px 14px;background:var(--p);color:#fff;font-weight:600;cursor:pointer;min-height:48px}
+button.sec{background:transparent;color:var(--p);border:1.5px solid var(--p)}
+button.gh{background:transparent;color:var(--mu);border:1px solid var(--ln);font-weight:500}
+button:disabled{opacity:.45}
+input[type=text],input[type=url],textarea{width:100%;font:inherit;padding:12px;border-radius:10px;border:1px solid var(--ln);background:var(--bg);color:var(--tx)}
+label{display:block;margin:10px 0 4px;font-weight:600}
+.bar{height:10px;border-radius:6px;background:var(--ln);overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;background:var(--ok);width:0;transition:width .25s}
+.row{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--ln)}
+.row:first-child{border-top:0}
+.num{flex:0 0 30px;height:30px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem}
+.row.done .num{background:var(--ok);color:#fff}
+.row.skip .num{background:var(--wa);color:#fff}
+.info{flex:1;min-width:0}
+.info b{display:block}
+.thumb{width:54px;height:54px;border-radius:8px;object-fit:cover;flex:0 0 54px;background:var(--ln)}
+.acts{display:flex;flex-direction:column;gap:6px;flex:0 0 auto}
+.acts button{padding:8px 12px;min-height:40px;font-size:.9rem}
+.badge{display:inline-block;font-size:.78rem;padding:2px 8px;border-radius:99px;background:var(--bg);color:var(--wa);margin-top:3px;border:1px solid var(--wa)}
+.foot{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--ln);padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px}
+.foot button{flex:1}
+.hide{display:none!important}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:6px 0}
+.chk input{width:22px;height:22px;margin-top:2px}
+pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:10px;border-radius:10px;font-size:.85rem}
+.step{display:flex;gap:10px;margin:12px 0}
+.step .num{background:var(--p);color:#fff}
+</style>
+</head>
+<body>
+
+<!-- ===== Çekim ekranı ===== -->
+<div id="vShoot">
+  <h1>📷 Muayene fotoğrafları</h1>
+  <div class="s" id="jobLine"></div>
+  <div class="card" id="nameCard">
+    <label for="mName">İş adı ya da adres</label>
+    <input type="text" id="mName" placeholder="Örn: Ali Veli, Altıntepsi Mah. 12/3" autocomplete="off">
+    <div class="s" style="margin-top:6px">Fotoğraf dosyalarının adında bu yazı kullanılır.</div>
+    <button id="mSave" style="margin-top:10px;width:100%">Devam</button>
+  </div>
+  <div id="shootBody" class="hide">
+    <div class="card">
+      <div><b id="cnt"></b> <span class="s" id="cntSub"></span></div>
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="s">Her başlığa dokunup çek. Bodrum gibi yerlerde internet olmasa da fotoğraflar telefonda saklanır; sayfayı kapatma, bağlantıdan tekrar açınca kaldığın yerden devam edersin.</div>
+    </div>
+    <div class="card" id="list"></div>
+  </div>
+</div>
+
+<!-- ===== Gönderme ekranı ===== -->
+<div id="vSend" class="hide">
+  <h1>📤 Gönder</h1>
+  <div class="card" id="sendSum"></div>
+  <div class="card">
+    <div class="step"><div class="num">1</div><div style="flex:1"><b>Paylaş</b> <span class="s">(en kolayı)</span><div class="s">WhatsApp, e-posta ya da OneDrive uygulamasını seçersin; tüm fotoğraflar birlikte gider.</div><button id="bShare" style="margin-top:8px;width:100%">Paylaş</button><div class="s hide" id="shareNo">Bu telefon toplu paylaşmayı desteklemiyor, aşağıdaki yolu kullan.</div></div></div>
+    <div class="step" id="stepUp"><div class="num">2</div><div style="flex:1"><b>OneDrive yükleme sayfası</b><div class="s">Önce fotoğrafları telefona kaydeder, sonra yükleme sayfasını açar. Açılan sayfada "Dosya seç"e basıp kaydedilen fotoğrafları seç.</div><button id="bSave" class="sec" style="margin-top:8px;width:100%">Telefona kaydet ve sayfayı aç</button></div></div>
+    <div class="step"><div class="num">3</div><div style="flex:1"><b>Tek ZIP dosyası</b><div class="s">Hepsi tek dosyada iner.</div><button id="bZip" class="sec" style="margin-top:8px;width:100%">ZIP indir</button></div></div>
+  </div>
+  <div class="s" id="sendMsg" role="status"></div>
+</div>
+
+<!-- ===== Bağlantı hazırlama (kullanıcı) ===== -->
+<div id="vKur" class="hide">
+  <h1>🔗 Elektrikçi bağlantısı hazırla</h1>
+  <div class="s">İş için istenen başlıkları seç; çıkan bağlantıyı elektrikçiye gönder.</div>
+  <div class="card">
+    <label for="kM">İş adı ya da adres (isteğe bağlı)</label>
+    <input type="text" id="kM" placeholder="Boş bırakırsan elektrikçi kendisi yazar">
+    <label for="kU">OneDrive "Dosya iste" bağlantısı (isteğe bağlı)</label>
+    <input type="url" id="kU" placeholder="https://1drv.ms/...">
+    <div class="s">Yalnızca OneDrive ya da SharePoint adresleri kabul edilir.</div>
+  </div>
+  <div class="card"><h2>Başlıklar</h2><div style="display:flex;gap:8px;margin-bottom:6px"><button class="gh" id="kAll">Hepsi</button><button class="gh" id="kNone">Hiçbiri</button></div><div id="kList"></div></div>
+  <div class="card"><h2>Bağlantı</h2><pre id="kOut">—</pre><div style="display:flex;gap:8px"><button id="kCopy" class="sec" style="flex:1">Kopyala</button><button id="kWa" style="flex:1">WhatsApp</button></div><div class="s" id="kMsg" role="status"></div></div>
+</div>
+
+<div class="foot hide" id="foot"><button class="gh" id="bBack" style="flex:0 0 auto" hidden>← Geri</button><button id="bGo">Gönder</button></div>
+<input type="file" id="cam" accept="image/*" capture="environment" hidden>
+
+<script>
+'use strict';
+/* ---------- başlık havuzu (uygulamadaki varsayılanlarla aynı) ---------- */
+const TITLES=["Kapı Numarası","Kofra Genel","Kablo Etiketi","NH Sigorta","Pano Genel","IP Etiketi","Uyarı Levhası","Kapak Topraklama","Ana Kolon","Ana TMS","Dağıtım Barası","Topraklama Barası","Ana Topraklama","Kolon Topraklama","Kablo Renkleri","Giriş Sigortası","300mA Röle","Çıkış Sigortası","30mA Röle","4 Kutuplu TMS","Toroid Trafo","Toroid Röle","Ölçü Devresi","Topraklama Hattı","Saha Red Sebepleri","Talip Pano Genel Görünüm","Pano Dağıtım Hizmet Numarası"];
+const HINTS=["Kapı numarası net okunsun, kapının tamamı görünsün","Kofranın tamamı: kapalı ve açık hâliyle genel görünüm","Kablo etiketi yakından, yazılar okunaklı","NH sigorta ve değeri üzerinde okunacak şekilde","Panonun açık hâli, tüm elemanlar ve kablolar görünsün","IP koruma sınıfı etiketi yakından","Uyarı levhası düz karşıdan ve tam görünsün","Kapak topraklama kablosu ve bağlantı noktaları","Ana kolon kablosu, kesit ve etiketi okunacak şekilde","Ana TMS'nin değeri ve eğrisi (B/C) okunsun","Dağıtım barası ve çıkış bağlantıları","Topraklama barası ve bağlı iletkenler","Ana topraklama iletkeni ve bağlantısı","Kolon hattının topraklama iletkeni","Faz, nötr ve toprak renkleri ayırt edilebilsin","Giriş sigortası değeri okunsun","300 mA kaçak akım rölesi, etiketi okunaklı","Çıkış sigortası ve değeri","30 mA kaçak akım rölesi, test butonu görünsün","4 kutuplu TMS ve üzerindeki değer","Toroid trafo ve içinden geçen iletkenler","Toroid röle ayarı ve etiket değerleri","Ölçü devresi ve bağlantı klemensleri","Topraklama hattı uçtan uca görünsün","Eksik veya hatalı yeri yakından göster","Talep edilen panonun genel görünümü, ortalanmış","Dağıtım hizmet numarası etiketi okunaklı"];
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const two=n=>String(n).padStart(2,'0');
+const today=()=>{const d=new Date();return two(d.getDate())+two(d.getMonth()+1)+d.getFullYear()};
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+
+/* ---------- bağlantı parametreleri ---------- */
+const Q=new URLSearchParams(location.search);
+const OK_HOST=h=>/(^|\.)(1drv\.ms|onedrive\.live\.com|sharepoint\.com|office\.com)$/i.test(h);
+function safeUrl(u){try{const x=new URL(u);return x.protocol==='https:'&&OK_HOST(x.hostname)?x.href:''}catch(e){return ''}}
+function parseIds(s){
+  const out=[];String(s||'').split(',').forEach(p=>{const n=parseInt(p,10);if(n>=1&&n<=TITLES.length&&!out.includes(n))out.push(n)});
+  return out.sort((a,b)=>a-b);
+}
+const UP=safeUrl(Q.get('u')||'');
+let IDS=parseIds(Q.get('t'));if(!IDS.length)IDS=TITLES.map((_,i)=>i+1);
+let JOB=(Q.get('m')||lsGet('elk.m')||'').trim().slice(0,80);
+
+/* ---------- dosya adı ---------- */
+const nameSafe=s=>String(s).replace(/[\\\/:*?"<>|\u0000-\u001f]+/g,' ').replace(/\s+/g,' ').trim();
+const jobKey=()=>nameSafe(JOB).toLowerCase();
+const fileName=(n,date)=>[nameSafe(JOB),n+'-'+nameSafe(TITLES[n-1]),date].filter(Boolean).join('_')+'.jpg';
+
+/* ---------- telefonda saklama (IndexedDB) ---------- */
+let dbp;
+function db(){return dbp||(dbp=new Promise((res,rej)=>{const q=indexedDB.open('elektrikci',1);q.onupgradeneeded=()=>q.result.createObjectStore('p');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}))}
+async function idb(mode,fn){const d=await db();return new Promise((res,rej)=>{const t=d.transaction('p',mode),s=t.objectStore('p');let r;try{r=fn(s)}catch(e){rej(e);return}t.oncomplete=()=>res(r&&r.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)})}
+const kk=n=>jobKey()+'|'+n;
+const dbPut=(n,v)=>idb('readwrite',s=>s.put(v,kk(n)));
+const dbDel=n=>idb('readwrite',s=>s.delete(kk(n)));
+const dbGet=n=>idb('readonly',s=>s.get(kk(n)));
+
+let S={};   // n -> {blob,date,w,h,warn:[...]}  ya da {skip:true}
+async function loadAll(){
+  S={};
+  for(const n of IDS){try{const v=await dbGet(n);if(v)S[n]=v}catch(e){}}
+}
+
+/* ---------- fotoğraf işleme ve kalite denetimi ---------- */
+const MAXPX=2000,QUAL=.85;
+async function decode(file){
+  if(window.createImageBitmap){try{return await createImageBitmap(file,{imageOrientation:'from-image'})}catch(e){}}
+  return await new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{URL.revokeObjectURL(u);res(im)};im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('okunamadı'))};im.src=u});
+}
+/* bulanıklık (Laplace varyansı) ve parlaklık: küçültülmüş gri görüntüden */
+function analyze(src,w,h){
+  const W=Math.min(320,w),H=Math.max(1,Math.round(h*W/w));
+  const c=document.createElement('canvas');c.width=W;c.height=H;
+  const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(src,0,0,W,H);
+  const d=x.getImageData(0,0,W,H).data,g=new Float32Array(W*H);let sum=0;
+  for(let i=0;i<W*H;i++){const v=.299*d[4*i]+.587*d[4*i+1]+.114*d[4*i+2];g[i]=v;sum+=v}
+  let m=0,m2=0,k=0;
+  for(let y=1;y<H-1;y++)for(let xx=1;xx<W-1;xx++){const i=y*W+xx,l=4*g[i]-g[i-1]-g[i+1]-g[i-W]-g[i+W];m+=l;m2+=l*l;k++}
+  const mean=m/k;
+  return {sharp:m2/k-mean*mean,bright:sum/(W*H)};
+}
+function warnings(w,h,a){
+  const o=[];
+  if(Math.max(w,h)<1200)o.push('Çözünürlük düşük');
+  if(a.sharp<40)o.push('Bulanık olabilir');
+  if(a.bright<45)o.push('Çok karanlık');
+  else if(a.bright>235)o.push('Çok parlak');
+  return o;
+}
+async function process(file){
+  const im=await decode(file);
+  const w0=im.width,h0=im.height,k=Math.min(1,MAXPX/Math.max(w0,h0));
+  const w=Math.max(1,Math.round(w0*k)),h=Math.max(1,Math.round(h0*k));
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  c.getContext('2d').drawImage(im,0,0,w,h);
+  if(im.close)try{im.close()}catch(e){}
+  const a=analyze(c,w,h);
+  const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',QUAL));
+  if(!blob||!blob.size)throw new Error('Fotoğraf işlenemedi');
+  let d=today();
+  if(file.lastModified){const x=new Date(file.lastModified);if(x.getFullYear()>2015)d=two(x.getDate())+two(x.getMonth()+1)+x.getFullYear()}
+  return {blob,date:d,t:Date.now(),w,h,warn:warnings(w0,h0,a),sharp:Math.round(a.sharp),bright:Math.round(a.bright)};
+}
+
+/* ---------- çekim ekranı ---------- */
+let pendingN=0;
+const takenN=()=>IDS.filter(n=>S[n]&&S[n].blob).length;
+const skippedN=()=>IDS.filter(n=>S[n]&&S[n].skip).length;
+const thumbs={};
+function thumbUrl(n){const it=S[n];if(!it||!it.blob)return '';if(!thumbs[n]||thumbs[n].b!==it.blob){if(thumbs[n])URL.revokeObjectURL(thumbs[n].u);thumbs[n]={b:it.blob,u:URL.createObjectURL(it.blob)}}return thumbs[n].u}
+function render(){
+  const total=IDS.length,t=takenN(),s=skippedN();
+  $('cnt').textContent=t+' / '+total+' çekildi';
+  $('cntSub').textContent=s?('· '+s+' çekilemedi'):'';
+  $('barFill').style.width=Math.round(100*(t+s)/total)+'%';
+  $('list').innerHTML=IDS.map(n=>{
+    const it=S[n]||{},done=!!it.blob,sk=!!it.skip;
+    const badge=done&&it.warn&&it.warn.length?'<span class="badge">⚠ '+esc(it.warn.join(', '))+'</span>':'';
+    return '<div class="row '+(done?'done':sk?'skip':'')+'" data-n="'+n+'">'
+      +(done?'<img class="thumb" alt="" src="'+thumbUrl(n)+'">':'<div class="num">'+n+'</div>')
+      +'<div class="info"><b>'+n+'. '+esc(TITLES[n-1])+'</b><span class="s">'+(sk?'Çekilemedi':esc(HINTS[n-1]))+'</span>'+badge+'</div>'
+      +'<div class="acts">'
+      +'<button data-a="shoot">'+(done?'Yeniden çek':'📷 Çek')+'</button>'
+      +(done?'':(sk?'<button class="gh" data-a="unskip">Geri al</button>':'<button class="gh" data-a="skip">Çekilemiyor</button>'))
+      +'</div></div>';
+  }).join('');
+  $('bGo').textContent=t+s>=total?'Gönder ✓':'Gönder ('+t+'/'+total+')';
+  $('bGo').disabled=t===0;
+}
+$('list').addEventListener('click',async e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const n=+b.closest('.row').dataset.n,a=b.dataset.a;
+  if(a==='shoot'){pendingN=n;$('cam').value='';$('cam').click()}
+  else if(a==='skip'){S[n]={skip:true};await dbPut(n,S[n]);render()}
+  else if(a==='unskip'){delete S[n];await dbDel(n);render()}
+});
+$('cam').addEventListener('change',async()=>{
+  const f=$('cam').files&&$('cam').files[0],n=pendingN;if(!f||!n)return;
+  const row=document.querySelector('.row[data-n="'+n+'"] .s');if(row)row.textContent='İşleniyor…';
+  try{
+    const r=await process(f);
+    S[n]=r;await dbPut(n,r);
+  }catch(err){
+    alert('Bu fotoğraf kaydedilemedi: '+(err&&err.message||err)+'\nTekrar çekmeyi dene.');
+  }
+  pendingN=0;render();
+  /* bir sonraki çekilmemiş başlığa kaydır */
+  const nx=IDS.find(x=>!S[x]);const el=nx&&document.querySelector('.row[data-n="'+nx+'"]');if(el&&el.scrollIntoView)el.scrollIntoView({block:'center',behavior:'smooth'});
+});
+
+/* ---------- ZIP (sıkıştırmasız) ---------- */
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function crc32(u8){let c=0xFFFFFFFF;for(let i=0;i<u8.length;i++)c=CRC[(c^u8[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0}
+function makeZip(files){   // files: [{name,data:Uint8Array}]
+  const enc=new TextEncoder(),parts=[],cen=[];let off=0;
+  const d=new Date(),dt=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate(),tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1);
+  files.forEach(f=>{
+    const nm=enc.encode(f.name),crc=crc32(f.data),sz=f.data.length;
+    const lh=new DataView(new ArrayBuffer(30));
+    lh.setUint32(0,0x04034b50,true);lh.setUint16(4,20,true);lh.setUint16(6,0x0800,true);lh.setUint16(8,0,true);lh.setUint16(10,tm,true);lh.setUint16(12,dt,true);
+    lh.setUint32(14,crc,true);lh.setUint32(18,sz,true);lh.setUint32(22,sz,true);lh.setUint16(26,nm.length,true);lh.setUint16(28,0,true);
+    parts.push(lh.buffer,nm,f.data);
+    const ch=new DataView(new ArrayBuffer(46));
+    ch.setUint32(0,0x02014b50,true);ch.setUint16(4,20,true);ch.setUint16(6,20,true);ch.setUint16(8,0x0800,true);ch.setUint16(10,0,true);ch.setUint16(12,tm,true);ch.setUint16(14,dt,true);
+    ch.setUint32(16,crc,true);ch.setUint32(20,sz,true);ch.setUint32(24,sz,true);ch.setUint16(28,nm.length,true);ch.setUint32(42,off,true);
+    cen.push(ch.buffer,nm);
+    off+=30+nm.length+sz;
+  });
+  let cs=0;cen.forEach(b=>cs+=b.byteLength||b.length);
+  const end=new DataView(new ArrayBuffer(22));
+  end.setUint32(0,0x06054b50,true);end.setUint16(8,files.length,true);end.setUint16(10,files.length,true);end.setUint32(12,cs,true);end.setUint32(16,off,true);
+  return new Blob([...parts,...cen,end.buffer],{type:'application/zip'});
+}
+
+/* ---------- gönderme ---------- */
+const taken=()=>IDS.filter(n=>S[n]&&S[n].blob);
+function reportText(){
+  const L=['İş: '+(JOB||'(adsız)'),'Tarih: '+today(),'Çekilen: '+taken().length+' / '+IDS.length,''];
+  const miss=IDS.filter(n=>!S[n]),sk=IDS.filter(n=>S[n]&&S[n].skip),wr=taken().filter(n=>S[n].warn&&S[n].warn.length);
+  if(miss.length)L.push('ÇEKİLMEDİ: '+miss.map(n=>n+'-'+TITLES[n-1]).join(', '));
+  if(sk.length)L.push('ÇEKİLEMEDİ (elektrikçi bildirdi): '+sk.map(n=>n+'-'+TITLES[n-1]).join(', '));
+  if(wr.length)L.push('UYARILI: '+wr.map(n=>n+'-'+TITLES[n-1]+' ('+S[n].warn.join(', ')+')').join('; '));
+  if(!miss.length&&!sk.length&&!wr.length)L.push('Hepsi çekildi, uyarı yok.');
+  return L.join('\n');
+}
+function showSend(){
+  $('vShoot').classList.add('hide');$('vSend').classList.remove('hide');$('bGo').classList.add('hide');$('bBack').hidden=false;$('bBack').style.flex='1';
+  const miss=IDS.length-taken().length-skippedN(),wr=taken().filter(n=>S[n].warn&&S[n].warn.length).length;
+  $('sendSum').innerHTML='<b>'+taken().length+' fotoğraf gönderilecek</b>'
+    +(miss?'<div style="color:var(--er);margin-top:6px">⚠ '+miss+' başlık henüz çekilmedi.</div>':'')
+    +(skippedN()?'<div style="color:var(--wa);margin-top:6px">'+skippedN()+' başlık "çekilemedi" olarak işaretli.</div>':'')
+    +(wr?'<div style="color:var(--wa);margin-top:6px">⚠ '+wr+' fotoğrafta kalite uyarısı var; istersen geri dönüp yeniden çek.</div>':'')
+    +'<div class="s" style="margin-top:6px">Eksiklerin listesi gönderimle birlikte gider.</div>';
+  $('stepUp').classList.toggle('hide',!UP);
+  const canShare=!!(navigator.canShare&&navigator.share&&navigator.canShare({files:[new File([new Blob(['x'])],'a.jpg',{type:'image/jpeg'})]}));
+  $('bShare').disabled=!canShare;$('shareNo').classList.toggle('hide',canShare);
+}
+function files(){return taken().map(n=>new File([S[n].blob],fileName(n,S[n].date),{type:'image/jpeg'}))}
+function msg(t){$('sendMsg').textContent=t}
+$('bShare').addEventListener('click',async()=>{
+  try{await navigator.share({files:files(),title:'Muayene fotoğrafları '+(JOB||''),text:reportText()});msg('Paylaşıldı.')}
+  catch(e){if(e&&e.name!=='AbortError')msg('Paylaşılamadı: '+(e.message||e))}
+});
+function download(blob,name){const a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),30000)}
+$('bSave').addEventListener('click',async()=>{
+  const fs=files();
+  for(let i=0;i<fs.length;i++){download(fs[i],fs[i].name);await new Promise(r=>setTimeout(r,350))}
+  download(new Blob([reportText()],{type:'text/plain;charset=utf-8'}),(nameSafe(JOB)||'muayene')+'_rapor.txt');
+  msg(fs.length+' fotoğraf telefona kaydedildi. OneDrive sayfasında "Dosya seç"e basıp seç.');
+  if(UP)window.open(UP,'_blank','noopener');
+});
+$('bZip').addEventListener('click',async()=>{
+  const fs=files(),list=[];
+  for(const f of fs)list.push({name:f.name,data:new Uint8Array(await f.arrayBuffer())});
+  list.push({name:(nameSafe(JOB)||'muayene')+'_rapor.txt',data:new TextEncoder().encode(reportText())});
+  download(makeZip(list),(nameSafe(JOB)||'muayene')+'.zip');
+  msg('ZIP dosyası indirildi.');
+});
+$('bGo').addEventListener('click',showSend);
+$('bBack').addEventListener('click',()=>{$('vSend').classList.add('hide');$('vShoot').classList.remove('hide');$('bGo').classList.remove('hide');$('bBack').hidden=true;msg('')});
+
+/* ---------- iş adı ---------- */
+async function start(){
+  $('jobLine').textContent=JOB?JOB:'';
+  if(!JOB){$('nameCard').classList.remove('hide');$('shootBody').classList.add('hide');$('foot').classList.add('hide');return}
+  $('nameCard').classList.add('hide');$('shootBody').classList.remove('hide');$('foot').classList.remove('hide');
+  await loadAll();render();
+}
+$('mSave').addEventListener('click',()=>{
+  const v=$('mName').value.trim();if(!v){$('mName').focus();return}
+  JOB=v.slice(0,80);lsSet('elk.m',JOB);start();
+});
+
+/* ---------- bağlantı hazırlama ekranı (?kur=1) ---------- */
+function kur(){
+  $('vShoot').classList.add('hide');$('vKur').classList.remove('hide');
+  $('kList').innerHTML=TITLES.map((t,i)=>'<label class="chk" style="font-weight:400;margin:0"><input type="checkbox" value="'+(i+1)+'" checked><span><b>'+(i+1)+'. '+esc(t)+'</b></span></label>').join('');
+  const out=()=>{
+    const ids=[...document.querySelectorAll('#kList input:checked')].map(x=>+x.value);
+    const p=new URLSearchParams(),m=$('kM').value.trim(),u=$('kU').value.trim();
+    if(m)p.set('m',m);
+    if(ids.length&&ids.length<TITLES.length)p.set('t',ids.join(','));
+    if(u){const s=safeUrl(u);if(!s){$('kMsg').textContent='⚠ Yalnızca OneDrive ya da SharePoint adresi kabul edilir.';$('kOut').textContent='—';return}p.set('u',s)}
+    $('kMsg').textContent=ids.length?'':'⚠ En az bir başlık seç.';
+    const q=p.toString();$('kOut').textContent=ids.length?location.origin+location.pathname+(q?'?'+q:''):'—';
+  };
+  $('vKur').addEventListener('input',out);$('vKur').addEventListener('change',out);
+  $('kAll').onclick=()=>{document.querySelectorAll('#kList input').forEach(x=>x.checked=true);out()};
+  $('kNone').onclick=()=>{document.querySelectorAll('#kList input').forEach(x=>x.checked=false);out()};
+  $('kCopy').onclick=async()=>{const t=$('kOut').textContent;if(t==='—')return;try{await navigator.clipboard.writeText(t);$('kMsg').textContent='Kopyalandı.'}catch(e){$('kMsg').textContent='Kopyalanamadı, bağlantıyı elle seç.'}};
+  $('kWa').onclick=()=>{const t=$('kOut').textContent;if(t==='—')return;window.open('https://wa.me/?text='+encodeURIComponent('Muayene fotoğrafları için bağlantı: '+t),'_blank','noopener')};
+  out();
+}
+
+/* sınama için dışarı açılanlar */
+window.ELK={analyze,warnings,makeZip,crc32,fileName,safeUrl,parseIds,get S(){return S},get JOB(){return JOB}};
+
+if(Q.get('kur')==='1')kur();else start();
+</script>
+</body>
+</html>
