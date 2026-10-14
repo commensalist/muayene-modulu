@@ -41,6 +41,9 @@ label{display:block;margin:10px 0 4px;font-weight:600}
 pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:10px;border-radius:10px;font-size:.85rem}
 .step{display:flex;gap:10px;margin:12px 0}
 .step .num{background:var(--p);color:#fff}
+.note{position:fixed;left:14px;right:14px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:20;background:var(--card);border:2px solid var(--wa);border-radius:12px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,.25);white-space:pre-line;font-weight:600}
+.note.ok{border-color:var(--ok)}
+.note.er{border-color:var(--er)}
 </style>
 </head>
 <body>
@@ -93,6 +96,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:10px
 </div>
 
 <div class="foot hide" id="foot"><button class="gh" id="bBack" style="flex:0 0 auto" hidden>← Geri</button><button id="bGo">Gönder</button></div>
+<div class="note hide" id="note" role="status"></div>
 <input type="file" id="cam" accept="image/*" capture="environment" hidden>
 
 <script>
@@ -107,6 +111,7 @@ const two=n=>String(n).padStart(2,'0');
 const today=()=>{const d=new Date();return two(d.getDate())+two(d.getMonth()+1)+d.getFullYear()};
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const lsDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
 
 /* ---------- bağlantı parametreleri ---------- */
 const Q=new URLSearchParams(location.search);
@@ -182,7 +187,18 @@ async function process(file){
 }
 
 /* ---------- çekim ekranı ---------- */
-let pendingN=0;
+/* Hangi başlığın çekildiği telefonda da tutulur: kamera açılınca tarayıcı sayfayı atıp yeniden yükleyebilir,
+   bellekteki bilgi kaybolursa fotoğraf sessizce yok olmasın (Not 180). */
+let pendingN=0,camBusy=false,camSig='',noteT=0;
+const PEND_MS=10*60*1000;
+function setPend(n){pendingN=n;if(n)lsSet('elk.pend',JSON.stringify({n,j:jobKey(),t:Date.now()}));else lsDel('elk.pend')}
+function readPend(){try{const o=JSON.parse(lsGet('elk.pend')||'null');if(o&&o.j===jobKey()&&Date.now()-o.t<PEND_MS&&IDS.includes(o.n))return o.n}catch(e){}return 0}
+/* ekranda sabit, kaydırmadan görünen bildirim; kind: ''|'ok'|'er'; ms: kendiliğinden kapanma (0 = dokununca kapanır) */
+function note(t,kind,ms){
+  const e=$('note');e.textContent=t;e.className='note '+(kind||'');
+  clearTimeout(noteT);if(ms)noteT=setTimeout(()=>e.classList.add('hide'),ms);
+}
+$('note').addEventListener('click',()=>$('note').classList.add('hide'));
 const takenN=()=>IDS.filter(n=>S[n]&&S[n].blob).length;
 const skippedN=()=>IDS.filter(n=>S[n]&&S[n].skip).length;
 const thumbs={};
@@ -209,23 +225,46 @@ function render(){
 $('list').addEventListener('click',async e=>{
   const b=e.target.closest('button');if(!b)return;
   const n=+b.closest('.row').dataset.n,a=b.dataset.a;
-  if(a==='shoot'){pendingN=n;$('cam').value='';$('cam').click()}
+  if(a==='shoot'){setPend(n);camSig='';$('cam').value='';$('note').classList.add('hide');$('cam').click()}
   else if(a==='skip'){S[n]={skip:true};await dbPut(n,S[n]);render()}
   else if(a==='unskip'){delete S[n];await dbDel(n);render()}
 });
-$('cam').addEventListener('change',async()=>{
-  const f=$('cam').files&&$('cam').files[0],n=pendingN;if(!f||!n)return;
+async function takeCam(){
+  const f=$('cam').files&&$('cam').files[0];if(!f||camBusy)return;
+  const sig=f.name+'|'+f.size+'|'+f.lastModified;if(sig===camSig)return;   // aynı fotoğraf iki olaydan gelirse bir kez işle
+  let n=pendingN||readPend(),unknown=false;
+  if(!n){n=IDS.find(x=>!S[x]);unknown=true}   // hangi başlık olduğu kaybolduysa: sıradaki boş başlığa koy ve söyle
+  if(!n){camSig=sig;note('Fotoğraf alındı ama boş başlık kalmadı. Değiştirmek istediğin başlıkta "Yeniden çek"e bas.','er',0);return}
+  camBusy=true;camSig=sig;
   const row=document.querySelector('.row[data-n="'+n+'"] .s');if(row)row.textContent='İşleniyor…';
   try{
     const r=await process(f);
     S[n]=r;await dbPut(n,r);
+    const w=r.warn&&r.warn.length?' · ⚠ '+r.warn.join(', '):'';
+    if(unknown)note('✓ '+n+'. '+TITLES[n-1]+' kaydedildi'+w+'\nHangi başlık için çekildiği belli olmadığından fotoğraf '+n+'. başlığa konuldu. Yanlışsa o başlıkta "Yeniden çek"e bas.','',12000);
+    else note('✓ '+n+'. '+TITLES[n-1]+' kaydedildi'+w,w?'':'ok',w?9000:5000);
   }catch(err){
+    camSig='';
+    note('✗ '+n+'. '+TITLES[n-1]+' kaydedilemedi: '+(err&&err.message||err)+'\nTekrar çekmeyi dene.','er',0);
     alert('Bu fotoğraf kaydedilemedi: '+(err&&err.message||err)+'\nTekrar çekmeyi dene.');
   }
-  pendingN=0;render();
+  setPend(0);camBusy=false;render();
   /* bir sonraki çekilmemiş başlığa kaydır */
   const nx=IDS.find(x=>!S[x]);const el=nx&&document.querySelector('.row[data-n="'+nx+'"]');if(el&&el.scrollIntoView)el.scrollIntoView({block:'center',behavior:'smooth'});
-});
+}
+['change','input'].forEach(ev=>$('cam').addEventListener(ev,takeCam));
+$('cam').addEventListener('cancel',()=>setPend(0));
+/* kamera uygulamasından dönünce olay gelmediyse seçili dosyaya yine de bak */
+const camBack=()=>{if(document.visibilityState==='visible')setTimeout(takeCam,400)};
+document.addEventListener('visibilitychange',camBack);window.addEventListener('pageshow',camBack);window.addEventListener('focus',camBack);
+/* sayfa yeniden yüklendiğinde yarım kalmış çekim varsa sessiz kalma */
+function checkInterrupted(){
+  if(camBusy)return;
+  const p=readPend();if(!p)return;
+  setPend(0);
+  if(S[p]&&S[p].blob)return;
+  note('Az önce '+p+'. başlık ('+TITLES[p-1]+') çekilirken kamera yarım kalmış görünüyor; fotoğraf kaydedilmedi.\nLütfen bu başlığı tekrar çek.','er',0);
+}
 
 /* ---------- ZIP (sıkıştırmasız) ---------- */
 const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
@@ -304,6 +343,7 @@ async function start(){
   if(!JOB){$('nameCard').classList.remove('hide');$('shootBody').classList.add('hide');$('foot').classList.add('hide');return}
   $('nameCard').classList.add('hide');$('shootBody').classList.remove('hide');$('foot').classList.remove('hide');
   await loadAll();render();
+  setTimeout(checkInterrupted,900);
 }
 $('mSave').addEventListener('click',()=>{
   const v=$('mName').value.trim();if(!v){$('mName').focus();return}
@@ -332,7 +372,7 @@ function kur(){
 }
 
 /* sınama için dışarı açılanlar */
-window.ELK={analyze,warnings,makeZip,crc32,fileName,safeUrl,parseIds,get S(){return S},get JOB(){return JOB}};
+window.ELK={analyze,warnings,makeZip,crc32,fileName,safeUrl,parseIds,takeCam,setPend,readPend,get S(){return S},get JOB(){return JOB},get pending(){return pendingN}};
 
 if(Q.get('kur')==='1')kur();else start();
 </script>
