@@ -44,6 +44,14 @@ pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:10px
 .note{position:fixed;left:14px;right:14px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:20;background:var(--card);border:2px solid var(--wa);border-radius:12px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,.25);white-space:pre-line;font-weight:600}
 .note.ok{border-color:var(--ok)}
 .note.er{border-color:var(--er)}
+.thumb{cursor:pointer}
+#pv{position:fixed;inset:0;z-index:40;background:#000;display:flex;flex-direction:column;padding:12px 12px calc(12px + env(safe-area-inset-bottom))}
+#pv .pt{color:#fff;font-weight:700;margin:2px 0 8px}
+#pv .pw{color:#fbbf24;font-size:.9rem;margin-bottom:8px}
+#pv .pi{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+#pv img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
+#pv .pb{display:flex;gap:10px;margin-top:10px}
+#pv .pb button{flex:1}
 </style>
 </head>
 <body>
@@ -53,8 +61,8 @@ pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:10px
   <h1>📷 Muayene fotoğrafları</h1>
   <div class="s" id="jobLine"></div>
   <div class="card" id="nameCard">
-    <label for="mName">İş adı ya da adres</label>
-    <input type="text" id="mName" placeholder="Örn: Ali Veli, Altıntepsi Mah. 12/3" autocomplete="off">
+    <label for="mName">Müşteri adı</label>
+    <input type="text" id="mName" placeholder="Örn: Ali Veli" autocomplete="off">
     <div class="s" style="margin-top:6px">Fotoğraf dosyalarının adında bu yazı kullanılır.</div>
     <button id="mSave" style="margin-top:10px;width:100%">Devam</button>
   </div>
@@ -73,9 +81,9 @@ pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:10px
   <h1>📤 Gönder</h1>
   <div class="card" id="sendSum"></div>
   <div class="card">
-    <div class="step"><div class="num">1</div><div style="flex:1"><b>Paylaş</b> <span class="s">(en kolayı)</span><div class="s">WhatsApp, e-posta ya da OneDrive uygulamasını seçersin; tüm fotoğraflar birlikte gider.</div><button id="bShare" style="margin-top:8px;width:100%">Paylaş</button><div class="s hide" id="shareNo">Bu telefon toplu paylaşmayı desteklemiyor, aşağıdaki yolu kullan.</div></div></div>
+    <div class="step"><div class="num">1</div><div style="flex:1"><b>Paylaş</b> <span class="s">(en kolayı)</span><div class="s">WhatsApp, e-posta ya da OneDrive uygulamasını seçersin; her fotoğraf kendi adıyla PDF olarak gider, altına yazı eklenmez.</div><button id="bShare" style="margin-top:8px;width:100%">Paylaş</button><button id="bMiss" class="gh" style="margin-top:8px;width:100%">Eksik listesini ayrı mesaj olarak gönder</button><div class="s hide" id="shareNo">Bu telefon toplu paylaşmayı desteklemiyor, aşağıdaki yolu kullan.</div></div></div>
     <div class="step" id="stepUp"><div class="num">2</div><div style="flex:1"><b>OneDrive yükleme sayfası</b><div class="s">Önce fotoğrafları telefona kaydeder, sonra yükleme sayfasını açar. Açılan sayfada "Dosya seç"e basıp kaydedilen fotoğrafları seç.</div><button id="bSave" class="sec" style="margin-top:8px;width:100%">Telefona kaydet ve sayfayı aç</button></div></div>
-    <div class="step"><div class="num">3</div><div style="flex:1"><b>Tek ZIP dosyası</b><div class="s">Hepsi tek dosyada iner.</div><button id="bZip" class="sec" style="margin-top:8px;width:100%">ZIP indir</button></div></div>
+    <div class="step"><div class="num">3</div><div style="flex:1"><b>Tek ZIP dosyası</b><div class="s">Fotoğraflar JPG olarak tek dosyada iner (yedek).</div><button id="bZip" class="sec" style="margin-top:8px;width:100%">ZIP indir</button></div></div>
   </div>
   <div class="s" id="sendMsg" role="status"></div>
 </div>
@@ -85,7 +93,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:10px
   <h1>🔗 Elektrikçi bağlantısı hazırla</h1>
   <div class="s">İş için istenen başlıkları seç; çıkan bağlantıyı elektrikçiye gönder.</div>
   <div class="card">
-    <label for="kM">İş adı ya da adres (isteğe bağlı)</label>
+    <label for="kM">Müşteri adı (yaz: elektrikçi adı yazmak zorunda kalmaz)</label>
     <input type="text" id="kM" placeholder="Boş bırakırsan elektrikçi kendisi yazar">
     <label for="kU">OneDrive "Dosya iste" bağlantısı (isteğe bağlı)</label>
     <input type="url" id="kU" placeholder="https://1drv.ms/...">
@@ -97,6 +105,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:10px
 
 <div class="foot hide" id="foot"><button class="gh" id="bBack" style="flex:0 0 auto" hidden>← Geri</button><button id="bGo">Gönder</button></div>
 <div class="note hide" id="note" role="status"></div>
+<div id="pv" class="hide"><div class="pt" id="pvT"></div><div class="pw hide" id="pvW"></div><div class="pi"><img id="pvI" alt=""></div><div class="pb"><button class="sec" id="pvRe" style="background:transparent;color:#fff;border-color:#fff">Tekrar çek</button><button id="pvOk">Tamam</button></div></div>
 <input type="file" id="cam" accept="image/*" capture="environment" hidden>
 
 <script>
@@ -199,6 +208,20 @@ function note(t,kind,ms){
   clearTimeout(noteT);if(ms)noteT=setTimeout(()=>e.classList.add('hide'),ms);
 }
 $('note').addEventListener('click',()=>$('note').classList.add('hide'));
+let pvN=0;
+function preview(n,fresh,extra){
+  const it=S[n];if(!it||!it.blob)return;pvN=n;
+  $('pvT').textContent=n+'. '+TITLES[n-1];
+  const w=$('pvW'),tx=[extra||'',it.warn&&it.warn.length?'⚠ '+it.warn.join(', ')+' — istersen "Tekrar çek"e bas.':''].filter(Boolean).join('\n');w.textContent=tx;w.style.whiteSpace='pre-line';w.classList.toggle('hide',!tx);
+  $('pvI').src=thumbUrl(n);$('pvOk').textContent=fresh?'Tamam':'Kapat';
+  $('note').classList.add('hide');$('pv').classList.remove('hide');
+}
+function closePreview(){
+  $('pv').classList.add('hide');$('pvI').removeAttribute('src');pvN=0;
+  const nx=IDS.find(x=>!S[x]);const el=nx&&document.querySelector('.row[data-n="'+nx+'"]');if(el&&el.scrollIntoView)el.scrollIntoView({block:'center',behavior:'smooth'});
+}
+$('pvOk').addEventListener('click',closePreview);
+$('pvRe').addEventListener('click',()=>{const n=pvN;$('pv').classList.add('hide');$('pvI').removeAttribute('src');pvN=0;if(n){setPend(n);camSig='';$('cam').value='';$('cam').click()}});
 const takenN=()=>IDS.filter(n=>S[n]&&S[n].blob).length;
 const skippedN=()=>IDS.filter(n=>S[n]&&S[n].skip).length;
 const thumbs={};
@@ -223,6 +246,7 @@ function render(){
   $('bGo').disabled=t===0;
 }
 $('list').addEventListener('click',async e=>{
+  const th=e.target.closest('.thumb');if(th){preview(+th.closest('.row').dataset.n,false);return}
   const b=e.target.closest('button');if(!b)return;
   const n=+b.closest('.row').dataset.n,a=b.dataset.a;
   if(a==='shoot'){setPend(n);camSig='';$('cam').value='';$('note').classList.add('hide');$('cam').click()}
@@ -249,8 +273,7 @@ async function takeCam(){
     alert('Bu fotoğraf kaydedilemedi: '+(err&&err.message||err)+'\nTekrar çekmeyi dene.');
   }
   setPend(0);camBusy=false;render();
-  /* bir sonraki çekilmemiş başlığa kaydır */
-  const nx=IDS.find(x=>!S[x]);const el=nx&&document.querySelector('.row[data-n="'+nx+'"]');if(el&&el.scrollIntoView)el.scrollIntoView({block:'center',behavior:'smooth'});
+  if(S[n]&&S[n].blob)preview(n,true,unknown?'Hangi başlık için çekildiği belli olmadığından fotoğraf bu başlığa konuldu. Yanlışsa "Tekrar çek"e bas, sonra doğru başlıktan çek.':'');else closePreview();
 }
 ['change','input'].forEach(ev=>$('cam').addEventListener(ev,takeCam));
 $('cam').addEventListener('cancel',()=>setPend(0));
@@ -293,7 +316,7 @@ function makeZip(files){   // files: [{name,data:Uint8Array}]
 /* ---------- gönderme ---------- */
 const taken=()=>IDS.filter(n=>S[n]&&S[n].blob);
 function reportText(){
-  const L=['İş: '+(JOB||'(adsız)'),'Tarih: '+today(),'Çekilen: '+taken().length+' / '+IDS.length,''];
+  const L=['Müşteri: '+(JOB||'(adsız)'),'Tarih: '+today(),'Çekilen: '+taken().length+' / '+IDS.length,''];
   const miss=IDS.filter(n=>!S[n]),sk=IDS.filter(n=>S[n]&&S[n].skip),wr=taken().filter(n=>S[n].warn&&S[n].warn.length);
   if(miss.length)L.push('ÇEKİLMEDİ: '+miss.map(n=>n+'-'+TITLES[n-1]).join(', '));
   if(sk.length)L.push('ÇEKİLEMEDİ (elektrikçi bildirdi): '+sk.map(n=>n+'-'+TITLES[n-1]).join(', '));
@@ -310,18 +333,46 @@ function showSend(){
     +(wr?'<div style="color:var(--wa);margin-top:6px">⚠ '+wr+' fotoğrafta kalite uyarısı var; istersen geri dönüp yeniden çek.</div>':'')
     +'<div class="s" style="margin-top:6px">Eksiklerin listesi gönderimle birlikte gider.</div>';
   $('stepUp').classList.toggle('hide',!UP);
-  const canShare=!!(navigator.canShare&&navigator.share&&navigator.canShare({files:[new File([new Blob(['x'])],'a.jpg',{type:'image/jpeg'})]}));
-  $('bShare').disabled=!canShare;$('shareNo').classList.toggle('hide',canShare);
+  const canShare=!!(navigator.canShare&&navigator.share&&navigator.canShare({files:[new File([new Blob(['x'])],'a.pdf',{type:'application/pdf'})]}));
+  $('bShare').disabled=!canShare;$('bMiss').classList.toggle('hide',!(navigator.share));$('shareNo').classList.toggle('hide',canShare);
 }
 function files(){return taken().map(n=>new File([S[n].blob],fileName(n,S[n].date),{type:'image/jpeg'}))}
+/* Her fotoğraf kendi adıyla tek sayfalık PDF: WhatsApp belge adını değiştirmez ve yazı eklemez (Not 186-188). Kütüphanesiz, JPEG olduğu gibi gömülür. */
+function makePdf(jpg,w,h){
+  const k=842/Math.max(w,h),pw=Math.max(1,Math.round(w*k)),ph=Math.max(1,Math.round(h*k));
+  const te=new TextEncoder(),parts=[],offs=[];let len=0;
+  const add=b=>{if(typeof b==='string')b=te.encode(b);parts.push(b);len+=b.length};
+  const obj=(i,head,stream)=>{offs[i]=len;add(i+' 0 obj\n'+head);if(stream){add('\nstream\n');add(stream);add('\nendstream')}add('\nendobj\n')};
+  add('%PDF-1.4\n');
+  obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
+  obj(2,'<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
+  obj(3,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+pw+' '+ph+'] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>');
+  obj(4,'<< /Type /XObject /Subtype /Image /Width '+w+' /Height '+h+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpg.length+' >>',jpg);
+  const c='q '+pw+' 0 0 '+ph+' 0 0 cm /Im0 Do Q';
+  obj(5,'<< /Length '+c.length+' >>',c);
+  const xr=len;let t='xref\n0 6\n0000000000 65535 f \n';
+  for(let i=1;i<=5;i++)t+=String(offs[i]).padStart(10,'0')+' 00000 n \n';
+  add(t+'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF\n');
+  return new Blob(parts,{type:'application/pdf'});
+}
+const pdfName=(n,date)=>fileName(n,date).replace(/\.jpg$/,'.pdf');
+async function pdfFiles(){
+  const out=[];
+  for(const n of taken()){const it=S[n];out.push(new File([makePdf(new Uint8Array(await it.blob.arrayBuffer()),it.w,it.h)],pdfName(n,it.date),{type:'application/pdf'}))}
+  return out;
+}
 function msg(t){$('sendMsg').textContent=t}
 $('bShare').addEventListener('click',async()=>{
-  try{await navigator.share({files:files(),title:'Muayene fotoğrafları '+(JOB||''),text:reportText()});msg('Paylaşıldı.')}
+  try{msg('PDF\'ler hazırlanıyor…');const fs=await pdfFiles();await navigator.share({files:fs});msg('Paylaşıldı. Eksik varsa listeyi aşağıdaki düğmeyle ayrı mesaj olarak gönder.')}
+  catch(e){msg(e&&e.name==='AbortError'?'':'Paylaşılamadı: '+(e.message||e))}
+});
+$('bMiss').addEventListener('click',async()=>{
+  try{await navigator.share({text:reportText()});msg('Liste paylaşıldı.')}
   catch(e){if(e&&e.name!=='AbortError')msg('Paylaşılamadı: '+(e.message||e))}
 });
 function download(blob,name){const a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),30000)}
 $('bSave').addEventListener('click',async()=>{
-  const fs=files();
+  const fs=await pdfFiles();
   for(let i=0;i<fs.length;i++){download(fs[i],fs[i].name);await new Promise(r=>setTimeout(r,350))}
   download(new Blob([reportText()],{type:'text/plain;charset=utf-8'}),(nameSafe(JOB)||'muayene')+'_rapor.txt');
   msg(fs.length+' fotoğraf telefona kaydedildi. OneDrive sayfasında "Dosya seç"e basıp seç.');
@@ -337,7 +388,7 @@ $('bZip').addEventListener('click',async()=>{
 $('bGo').addEventListener('click',showSend);
 $('bBack').addEventListener('click',()=>{$('vSend').classList.add('hide');$('vShoot').classList.remove('hide');$('bGo').classList.remove('hide');$('bBack').hidden=true;msg('')});
 
-/* ---------- iş adı ---------- */
+/* ---------- müşteri adı ---------- */
 async function start(){
   $('jobLine').textContent=JOB?JOB:'';
   if(!JOB){$('nameCard').classList.remove('hide');$('shootBody').classList.add('hide');$('foot').classList.add('hide');return}
