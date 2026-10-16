@@ -60,12 +60,8 @@ pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:10px
 <div id="vShoot">
   <h1>📷 Muayene fotoğrafları</h1>
   <div class="s" id="jobLine"></div>
-  <div class="card" id="nameCard">
-    <label for="mName">Müşteri adı</label>
-    <input type="text" id="mName" placeholder="Örn: Ali Veli" autocomplete="off">
-    <div class="s" style="margin-top:6px">Fotoğraf dosyalarının adında bu yazı kullanılır.</div>
-    <button id="mSave" style="margin-top:10px;width:100%">Devam</button>
-  </div>
+  <div class="s" id="expLine"></div>
+  <div class="card hide" id="expCard" style="border-color:var(--wa)"><b>⏰ Bu bağlantının süresi doldu.</b><div class="s" style="margin-top:4px">Yeni fotoğraf çekilemez. Çektiklerini aşağıdaki "Gönder" ile göndermeyi bitirebilirsin.</div></div>
   <div id="shootBody" class="hide">
     <div class="card">
       <div><b id="cnt"></b> <span class="s" id="cntSub"></span></div>
@@ -82,25 +78,17 @@ pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:10px
   <div class="card" id="sendSum"></div>
   <div class="card">
     <div class="step"><div class="num">1</div><div style="flex:1"><b>Paylaş</b> <span class="s">(en kolayı)</span><div class="s">WhatsApp, e-posta ya da OneDrive uygulamasını seçersin; her fotoğraf kendi adıyla PDF olarak gider, altına yazı eklenmez.</div><button id="bShare" style="margin-top:8px;width:100%">Paylaş</button><button id="bMiss" class="gh" style="margin-top:8px;width:100%">Eksik listesini ayrı mesaj olarak gönder</button><div class="s hide" id="shareNo">Bu telefon toplu paylaşmayı desteklemiyor, aşağıdaki yolu kullan.</div></div></div>
-    <div class="step" id="stepUp"><div class="num">2</div><div style="flex:1"><b>OneDrive yükleme sayfası</b><div class="s">Önce fotoğrafları telefona kaydeder, sonra yükleme sayfasını açar. Açılan sayfada "Dosya seç"e basıp kaydedilen fotoğrafları seç.</div><button id="bSave" class="sec" style="margin-top:8px;width:100%">Telefona kaydet ve sayfayı aç</button></div></div>
+    <div class="step" id="stepUp"><div class="num">2</div><div style="flex:1"><b>OneDrive klasörü</b><div class="s">Önce fotoğrafları telefona kaydeder, sonra bu iş için açılan OneDrive klasörünü açar. Açılan sayfada "Yükle"ye basıp kaydedilen fotoğrafları seç.</div><button id="bSave" class="sec" style="margin-top:8px;width:100%">Telefona kaydet ve klasörü aç</button></div></div>
     <div class="step"><div class="num">3</div><div style="flex:1"><b>Tek ZIP dosyası</b><div class="s">Fotoğraflar JPG olarak tek dosyada iner (yedek).</div><button id="bZip" class="sec" style="margin-top:8px;width:100%">ZIP indir</button></div></div>
   </div>
   <div class="s" id="sendMsg" role="status"></div>
 </div>
 
-<!-- ===== Bağlantı hazırlama (kullanıcı) ===== -->
-<div id="vKur" class="hide">
-  <h1>🔗 Elektrikçi bağlantısı hazırla</h1>
-  <div class="s">İş için istenen başlıkları seç; çıkan bağlantıyı elektrikçiye gönder.</div>
-  <div class="card">
-    <label for="kM">Müşteri adı (yaz: elektrikçi adı yazmak zorunda kalmaz)</label>
-    <input type="text" id="kM" placeholder="Boş bırakırsan elektrikçi kendisi yazar">
-    <label for="kU">OneDrive "Dosya iste" bağlantısı (isteğe bağlı)</label>
-    <input type="url" id="kU" placeholder="https://1drv.ms/...">
-    <div class="s">Yalnızca OneDrive ya da SharePoint adresleri kabul edilir.</div>
-  </div>
-  <div class="card"><h2>Başlıklar</h2><div style="display:flex;gap:8px;margin-bottom:6px"><button class="gh" id="kAll">Hepsi</button><button class="gh" id="kNone">Hiçbiri</button></div><div id="kList"></div></div>
-  <div class="card"><h2>Bağlantı</h2><pre id="kOut">—</pre><div style="display:flex;gap:8px"><button id="kCopy" class="sec" style="flex:1">Kopyala</button><button id="kWa" style="flex:1">WhatsApp</button></div><div class="s" id="kMsg" role="status"></div></div>
+<!-- ===== Geçersiz ya da süresi dolmuş bağlantı ===== -->
+<div id="vBad" class="hide">
+  <h1>🔒 Bağlantı kullanılamıyor</h1>
+  <div class="card"><b id="badT"></b><div class="s" id="badS" style="margin-top:6px"></div></div>
+  <div class="card hide" id="badZip"><div class="s">Bu iş için telefonunda daha önce çekilmiş fotoğraflar duruyor. İstersen yedek olarak indir.</div><button id="bOldZip" class="sec" style="margin-top:8px;width:100%">Fotoğrafları ZIP olarak indir</button></div>
 </div>
 
 <div class="foot hide" id="foot"><button class="gh" id="bBack" style="flex:0 0 auto" hidden>← Geri</button><button id="bGo">Gönder</button></div>
@@ -122,17 +110,55 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 const lsDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
 
-/* ---------- bağlantı parametreleri ---------- */
+/* ---------- mühürlü, süreli bağlantı (Not 230, 231) ----------
+   Bağlantıyı yalnız Foto Asistanı üretir: ?d=<iş bilgisi>&s=<mühür>.
+   d = base64url(UTF-8 JSON {v:1, m:müşteri adı, t:[başlık no], u:OneDrive klasör bağlantısı, e:bitiş (ms), i:veriliş (ms)})
+   s = base64url(ECDSA P-256 / SHA-256 imzası, ham r||s, 64 bayt), imzalanan veri: d yazısının kendisi (ASCII).
+   Gizli anahtar yalnız uygulamada (A\_Büro Asistanı); burada yalnız doğrulama anahtarı durur.
+   Mühürsüz, değiştirilmiş ya da süresi dolmuş bağlantıda çekim ekranı açılmaz. */
+const PUBKEYS=[{"kty": "EC", "crv": "P-256", "x": "y_VFq1czdowyLF_ET-cVHGdaTabNHPIJELQ-zQWreSw", "y": "NluBIXCGNmrUu9ManvFGPzb2PrBGrkw8zUrLmiWtIXE"}];   // doğrulama anahtarları (JWK, yalnız açık yarı); gizli yarı A\_Büro Asistanı'nda, depoda YOK. Anahtar değişirse eskisi bir süre dizide kalır.
 const Q=new URLSearchParams(location.search);
 const OK_HOST=h=>/(^|\.)(1drv\.ms|onedrive\.live\.com|sharepoint\.com|office\.com)$/i.test(h);
 function safeUrl(u){try{const x=new URL(u);return x.protocol==='https:'&&OK_HOST(x.hostname)?x.href:''}catch(e){return ''}}
 function parseIds(s){
-  const out=[];String(s||'').split(',').forEach(p=>{const n=parseInt(p,10);if(n>=1&&n<=TITLES.length&&!out.includes(n))out.push(n)});
+  const out=[];(Array.isArray(s)?s:String(s||'').split(',')).forEach(p=>{const n=parseInt(p,10);if(n>=1&&n<=TITLES.length&&!out.includes(n))out.push(n)});
   return out.sort((a,b)=>a-b);
 }
-const UP=safeUrl(Q.get('u')||'');
-let IDS=parseIds(Q.get('t'));if(!IDS.length)IDS=TITLES.map((_,i)=>i+1);
-let JOB=(Q.get('m')||lsGet('elk.m')||'').trim().slice(0,80);
+const b64u=s=>{s=String(s).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u};
+/* saat: telefon saati geri alınarak süre uzatılamasın. Sunucu saati (sayfanın Date başlığı) ve
+   bu telefonda görülen en ileri saat kullanılır; hangisi daha ilerideyse o geçerli. */
+let SRV_OFF=null;
+async function syncTime(){
+  try{const r=await fetch(location.pathname+'?_t='+Date.now(),{method:'HEAD',cache:'no-store'});const d=Date.parse(r.headers.get('date')||'');if(d)SRV_OFF=d-Date.now()}catch(e){}
+}
+function nowMs(){
+  let t=Date.now();if(SRV_OFF!==null&&t+SRV_OFF>t)t+=SRV_OFF;
+  const seen=+(lsGet('elk.seen')||0);if(seen>t)t=seen;else lsSet('elk.seen',String(t));
+  return t;
+}
+/* sonuç: {ok:true, job} | {ok:false, why:'yok'|'bozuk'|'mühür'|'süre', job?} */
+async function checkLink(){
+  const d=Q.get('d')||'',s=Q.get('s')||'';
+  if(!d||!s)return {ok:false,why:'yok'};
+  let job;try{job=JSON.parse(new TextDecoder().decode(b64u(d)))}catch(e){return {ok:false,why:'bozuk'}}
+  if(!job||job.v!==1||typeof job.m!=='string'||!job.m.trim()||!(job.e>0))return {ok:false,why:'bozuk'};
+  let good=false;
+  if(window.crypto&&crypto.subtle){
+    let sig;try{sig=b64u(s)}catch(e){return {ok:false,why:'mühür'}}
+    for(const k of PUBKEYS){try{const key=await crypto.subtle.importKey('jwk',k,{name:'ECDSA',namedCurve:'P-256'},false,['verify']);if(await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},key,sig,new TextEncoder().encode(d))){good=true;break}}catch(e){}}
+  }
+  if(!good)return {ok:false,why:'mühür'};
+  if(nowMs()>=job.e)return {ok:false,why:'süre',job};
+  return {ok:true,job};
+}
+let UP='',IDS=[],JOB='',EXP=0;
+function useJob(job){
+  JOB=String(job.m).trim().slice(0,80);
+  IDS=parseIds(job.t);if(!IDS.length)IDS=TITLES.map((_,i)=>i+1);
+  UP=safeUrl(job.u||'');EXP=+job.e||0;
+}
+const expired=()=>!!EXP&&nowMs()>=EXP;
+const fmtDate=ms=>{const d=new Date(ms);return two(d.getDate())+'.'+two(d.getMonth()+1)+'.'+d.getFullYear()+' '+two(d.getHours())+':'+two(d.getMinutes())};
 
 /* ---------- dosya adı ---------- */
 const nameSafe=s=>String(s).replace(/[\\\/:*?"<>|\u0000-\u001f]+/g,' ').replace(/\s+/g,' ').trim();
@@ -221,7 +247,7 @@ function closePreview(){
   const nx=IDS.find(x=>!S[x]);const el=nx&&document.querySelector('.row[data-n="'+nx+'"]');if(el&&el.scrollIntoView)el.scrollIntoView({block:'center',behavior:'smooth'});
 }
 $('pvOk').addEventListener('click',closePreview);
-$('pvRe').addEventListener('click',()=>{const n=pvN;$('pv').classList.add('hide');$('pvI').removeAttribute('src');pvN=0;if(n){setPend(n);camSig='';$('cam').value='';$('cam').click()}});
+$('pvRe').addEventListener('click',()=>{const n=pvN;$('pv').classList.add('hide');$('pvI').removeAttribute('src');pvN=0;if(n&&expired()){markExpired();return}if(n){setPend(n);camSig='';$('cam').value='';$('cam').click()}});
 const takenN=()=>IDS.filter(n=>S[n]&&S[n].blob).length;
 const skippedN=()=>IDS.filter(n=>S[n]&&S[n].skip).length;
 const thumbs={};
@@ -234,11 +260,12 @@ function render(){
   $('list').innerHTML=IDS.map(n=>{
     const it=S[n]||{},done=!!it.blob,sk=!!it.skip;
     const badge=done&&it.warn&&it.warn.length?'<span class="badge">⚠ '+esc(it.warn.join(', '))+'</span>':'';
+    const ex=expired();
     return '<div class="row '+(done?'done':sk?'skip':'')+'" data-n="'+n+'">'
       +(done?'<img class="thumb" alt="" src="'+thumbUrl(n)+'">':'<div class="num">'+n+'</div>')
       +'<div class="info"><b>'+n+'. '+esc(TITLES[n-1])+'</b><span class="s">'+(sk?'Çekilemedi':esc(HINTS[n-1]))+'</span>'+badge+'</div>'
       +'<div class="acts">'
-      +'<button data-a="shoot">'+(done?'Yeniden çek':'📷 Çek')+'</button>'
+      +'<button data-a="shoot"'+(ex?' disabled':'')+'>'+(done?'Yeniden çek':'📷 Çek')+'</button>'
       +(done?'':(sk?'<button class="gh" data-a="unskip">Geri al</button>':'<button class="gh" data-a="skip">Çekilemiyor</button>'))
       +'</div></div>';
   }).join('');
@@ -249,6 +276,7 @@ $('list').addEventListener('click',async e=>{
   const th=e.target.closest('.thumb');if(th){preview(+th.closest('.row').dataset.n,false);return}
   const b=e.target.closest('button');if(!b)return;
   const n=+b.closest('.row').dataset.n,a=b.dataset.a;
+  if(a==='shoot'&&expired()){markExpired();return}
   if(a==='shoot'){setPend(n);camSig='';$('cam').value='';$('note').classList.add('hide');$('cam').click()}
   else if(a==='skip'){S[n]={skip:true};await dbPut(n,S[n]);render()}
   else if(a==='unskip'){delete S[n];await dbDel(n);render()}
@@ -362,8 +390,17 @@ async function pdfFiles(){
   return out;
 }
 function msg(t){$('sendMsg').textContent=t}
+/* Her gönderimde fotoğrafların bir kopyası elektrikçinin telefonunda da kalır (yedek; Not 231 düzeltmesi):
+   tarayıcıdan çekilen fotoğraf bazı telefonlarda galeriye kendiliğinden düşmez. */
+async function zipBlob(){
+  const list=[];
+  for(const f of files())list.push({name:f.name,data:new Uint8Array(await f.arrayBuffer())});
+  list.push({name:(nameSafe(JOB)||'muayene')+'_rapor.txt',data:new TextEncoder().encode(reportText())});
+  return makeZip(list);
+}
+async function saveCopy(){download(await zipBlob(),(nameSafe(JOB)||'muayene')+'.zip')}
 $('bShare').addEventListener('click',async()=>{
-  try{msg('PDF\'ler hazırlanıyor…');const fs=await pdfFiles();await navigator.share({files:fs});msg('Paylaşıldı. Eksik varsa listeyi aşağıdaki düğmeyle ayrı mesaj olarak gönder.')}
+  try{msg('PDF\'ler hazırlanıyor…');const fs=await pdfFiles();await navigator.share({files:fs});await saveCopy();msg('Paylaşıldı. Bir kopyası telefonuna da kaydedildi (İndirilenler). Eksik varsa listeyi aşağıdaki düğmeyle ayrı mesaj olarak gönder.')}
   catch(e){msg(e&&e.name==='AbortError'?'':'Paylaşılamadı: '+(e.message||e))}
 });
 $('bMiss').addEventListener('click',async()=>{
@@ -375,57 +412,51 @@ $('bSave').addEventListener('click',async()=>{
   const fs=await pdfFiles();
   for(let i=0;i<fs.length;i++){download(fs[i],fs[i].name);await new Promise(r=>setTimeout(r,350))}
   download(new Blob([reportText()],{type:'text/plain;charset=utf-8'}),(nameSafe(JOB)||'muayene')+'_rapor.txt');
-  msg(fs.length+' fotoğraf telefona kaydedildi. OneDrive sayfasında "Dosya seç"e basıp seç.');
+  msg(fs.length+' fotoğraf telefona kaydedildi (İndirilenler). OneDrive klasöründe "Yükle"ye basıp seç.');
   if(UP)window.open(UP,'_blank','noopener');
 });
 $('bZip').addEventListener('click',async()=>{
-  const fs=files(),list=[];
-  for(const f of fs)list.push({name:f.name,data:new Uint8Array(await f.arrayBuffer())});
-  list.push({name:(nameSafe(JOB)||'muayene')+'_rapor.txt',data:new TextEncoder().encode(reportText())});
-  download(makeZip(list),(nameSafe(JOB)||'muayene')+'.zip');
+  await saveCopy();
   msg('ZIP dosyası indirildi.');
 });
 $('bGo').addEventListener('click',showSend);
 $('bBack').addEventListener('click',()=>{$('vSend').classList.add('hide');$('vShoot').classList.remove('hide');$('bGo').classList.remove('hide');$('bBack').hidden=true;msg('')});
 
-/* ---------- müşteri adı ---------- */
+/* ---------- açılış ---------- */
+function markExpired(){
+  $('expCard').classList.remove('hide');$('expLine').textContent='';
+  document.querySelectorAll('.row button[data-a="shoot"]').forEach(b=>b.disabled=true);
+}
+const BAD={
+  'yok':['Bu sayfa yalnız büronun gönderdiği bağlantıyla açılır.','Fotoğraf çekmen istendiyse büroya haber ver, sana yeni bağlantı göndersinler.'],
+  'bozuk':['Bağlantı eksik ya da bozuk.','Bağlantıyı mesajdan bir kez daha, tamamını seçerek aç. Olmazsa büroya haber ver.'],
+  'mühür':['Bağlantı geçerli değil.','Bağlantı değiştirilmiş ya da eksik kopyalanmış olabilir. Büroya haber ver, sana yeni bağlantı göndersinler.'],
+  'süre':['Bu bağlantının süresi doldu.','İş için yeni fotoğraf gerekiyorsa büroya haber ver, sana yeni bağlantı göndersinler. Telefonuna kaydettiğin fotoğraflar olduğu gibi duruyor.']
+};
+async function showBad(r){
+  $('vShoot').classList.add('hide');$('foot').classList.add('hide');$('vBad').classList.remove('hide');
+  const t=BAD[r.why]||BAD.bozuk;$('badT').textContent=t[0];$('badS').textContent=t[1];
+  /* süresi dolmuş bir iş için telefonda kalmış fotoğraflar yedek olarak indirilebilir (yeni çekim yok) */
+  if(r.why==='süre'&&r.job){useJob(r.job);await loadAll();if(taken().length){$('badZip').classList.remove('hide');$('bOldZip').onclick=async()=>{await saveCopy()}}}
+}
 async function start(){
-  $('jobLine').textContent=JOB?JOB:'';
-  if(!JOB){$('nameCard').classList.remove('hide');$('shootBody').classList.add('hide');$('foot').classList.add('hide');return}
-  $('nameCard').classList.add('hide');$('shootBody').classList.remove('hide');$('foot').classList.remove('hide');
+  await syncTime();
+  const r=await checkLink();
+  if(!r.ok){await showBad(r);return}
+  useJob(r.job);
+  $('jobLine').textContent=JOB;$('expLine').textContent='Bağlantı '+fmtDate(EXP)+' tarihine kadar geçerli.';
+  $('shootBody').classList.remove('hide');$('foot').classList.remove('hide');
   await loadAll();render();
   setTimeout(checkInterrupted,900);
-}
-$('mSave').addEventListener('click',()=>{
-  const v=$('mName').value.trim();if(!v){$('mName').focus();return}
-  JOB=v.slice(0,80);lsSet('elk.m',JOB);start();
-});
-
-/* ---------- bağlantı hazırlama ekranı (?kur=1) ---------- */
-function kur(){
-  $('vShoot').classList.add('hide');$('vKur').classList.remove('hide');
-  $('kList').innerHTML=TITLES.map((t,i)=>'<label class="chk" style="font-weight:400;margin:0"><input type="checkbox" value="'+(i+1)+'" checked><span><b>'+(i+1)+'. '+esc(t)+'</b></span></label>').join('');
-  const out=()=>{
-    const ids=[...document.querySelectorAll('#kList input:checked')].map(x=>+x.value);
-    const p=new URLSearchParams(),m=$('kM').value.trim(),u=$('kU').value.trim();
-    if(m)p.set('m',m);
-    if(ids.length&&ids.length<TITLES.length)p.set('t',ids.join(','));
-    if(u){const s=safeUrl(u);if(!s){$('kMsg').textContent='⚠ Yalnızca OneDrive ya da SharePoint adresi kabul edilir.';$('kOut').textContent='—';return}p.set('u',s)}
-    $('kMsg').textContent=ids.length?'':'⚠ En az bir başlık seç.';
-    const q=p.toString();$('kOut').textContent=ids.length?location.origin+location.pathname+(q?'?'+q:''):'—';
-  };
-  $('vKur').addEventListener('input',out);$('vKur').addEventListener('change',out);
-  $('kAll').onclick=()=>{document.querySelectorAll('#kList input').forEach(x=>x.checked=true);out()};
-  $('kNone').onclick=()=>{document.querySelectorAll('#kList input').forEach(x=>x.checked=false);out()};
-  $('kCopy').onclick=async()=>{const t=$('kOut').textContent;if(t==='—')return;try{await navigator.clipboard.writeText(t);$('kMsg').textContent='Kopyalandı.'}catch(e){$('kMsg').textContent='Kopyalanamadı, bağlantıyı elle seç.'}};
-  $('kWa').onclick=()=>{const t=$('kOut').textContent;if(t==='—')return;window.open('https://wa.me/?text='+encodeURIComponent('Muayene fotoğrafları için bağlantı: '+t),'_blank','noopener')};
-  out();
+  /* sayfa açıkken süre dolarsa: yeni çekim kapanır, çekilenler gönderilebilir */
+  const tick=()=>{if(expired())markExpired()};
+  setInterval(tick,60000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')tick()});
 }
 
 /* sınama için dışarı açılanlar */
-window.ELK={analyze,warnings,makeZip,crc32,fileName,safeUrl,parseIds,takeCam,setPend,readPend,get S(){return S},get JOB(){return JOB},get pending(){return pendingN}};
+window.ELK={analyze,warnings,makeZip,crc32,fileName,safeUrl,parseIds,takeCam,setPend,readPend,nowMs,get S(){return S},get JOB(){return JOB},get pending(){return pendingN},get EXP(){return EXP}};
 
-if(Q.get('kur')==='1')kur();else start();
+start();
 </script>
 </body>
 </html>
