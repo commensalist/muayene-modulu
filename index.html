@@ -408,7 +408,7 @@ function files(){return taken().map(n=>new File([S[n].blob],fileName(n,S[n].date
    büro erişimi kapatınca imzalar geçersiz olur, sayfa "kapatıldı" der. */
 const AZV='2022-11-02';
 const boxUrl=name=>'https://'+BOX.a+'.blob.core.windows.net/'+BOX.c+(name?'/'+encodeURIComponent(name):'');
-const nameCode=()=>Date.now().toString(36).slice(-5)+Math.random().toString(36).slice(2,5);
+const nameCode=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,4);   // zaman sıralı: aynı adlı yeniden gönderimde yenisi sonra işlenir
 const boxName=fn=>fn.replace(/(\.[^.]*)?$/,m=>' ['+nameCode()+']'+m);
 /* 'open' | 'closed' | 'unknown' (internet yok / kutu yanıt vermedi: çekim yine de yapılabilir, gönderirken söylenir) */
 async function boxStatus(){
